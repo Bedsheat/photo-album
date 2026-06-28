@@ -11,6 +11,7 @@ import {
   addDoc,
   collection,
   deleteDoc,
+  updateDoc,
   doc,
   getDocs,
   getFirestore,
@@ -95,6 +96,13 @@ export async function deleteAlbumItem(id) {
   } catch (error) {
     throw new Error(getFirestoreDeleteMessage(error));
   }
+}
+
+export async function updateAlbumItem(id, fields) {
+  ensureConfigured();
+  await waitForSignedInUser();
+  const ref = doc(db, "albumItems", id);
+  await updateDoc(ref, fields);
 }
 
 function ensureConfigured() {

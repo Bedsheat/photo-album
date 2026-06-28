@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Camera,
+  Check,
   ChevronLeft,
   ChevronRight,
   Download,
@@ -11,6 +12,7 @@ import {
   LockKeyhole,
   LogOut,
   Moon,
+  Pencil,
   Shuffle,
   Sparkles,
   Sun,
@@ -27,6 +29,7 @@ import {
   getAlbumItems,
   signInAlbum,
   signOutAlbum,
+  updateAlbumItem,
 } from "./services/firebase";
 import { cloudinaryIsConfigured, uploadAlbumFile } from "./services/cloudinary";
 import "./styles.css";
@@ -66,6 +69,9 @@ function App() {
   const [darkMode, setDarkMode] = useState(
     () => localStorage.getItem(DARK_MODE_KEY) === "true",
   );
+  const [editingCaption, setEditingCaption] = useState(false);
+  const [captionDraft, setCaptionDraft] = useState("");
+  const [savingCaption, setSavingCaption] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", darkMode ? "dark" : "light");
@@ -288,7 +294,7 @@ function App() {
       return;
     }
 
-    setRandomItem(items[Math.floor(Math.random() * items.length)]);
+    openLightbox(items[Math.floor(Math.random() * items.length)]);
   }
 
   function openRelativeMemory(direction) {
@@ -297,13 +303,45 @@ function App() {
     const currentIndex = items.findIndex((item) => item.id === randomItem.id);
     const safeIndex = currentIndex === -1 ? 0 : currentIndex;
     const nextIndex = (safeIndex + direction + items.length) % items.length;
-    setRandomItem(items[nextIndex]);
+    openLightbox(items[nextIndex]);
   }
 
   function getDownloadName(item) {
     if (item.fileName) return item.fileName;
     const extension = item.type === "video" ? "mp4" : "jpg";
     return `our-memory.${extension}`;
+  }
+
+  function openLightbox(item) {
+    setRandomItem(item);
+    setEditingCaption(false);
+    setCaptionDraft("");
+  }
+
+  function startEditingCaption() {
+    setCaptionDraft(randomItem?.caption ?? "");
+    setEditingCaption(true);
+  }
+
+  function cancelEditingCaption() {
+    setEditingCaption(false);
+    setCaptionDraft("");
+  }
+
+  async function handleSaveCaption() {
+    if (!randomItem) return;
+    setSavingCaption(true);
+    try {
+      await updateAlbumItem(randomItem.id, { caption: captionDraft.trim() });
+      const updated = { ...randomItem, caption: captionDraft.trim() };
+      setItems((current) => current.map((i) => (i.id === randomItem.id ? updated : i)));
+      setRandomItem(updated);
+      setEditingCaption(false);
+    } catch (error) {
+      setStatus(error.message || "Could not save caption.");
+    } finally {
+      setSavingCaption(false);
+    }
   }
 
   async function confirmDelete() {
@@ -453,7 +491,7 @@ function App() {
                 key={item.id}
                 item={item}
                 onDelete={() => setConfirmDeleteItem(item)}
-                onOpen={() => setRandomItem(item)}
+                onOpen={() => openLightbox(item)}
               />
             ))}
           </div>
@@ -497,7 +535,36 @@ function App() {
           ) : null}
           <div className="lightbox-content">
             <MediaPreview item={randomItem} />
-            {randomItem.caption?.trim() ? <p>{randomItem.caption}</p> : null}
+            <div className="caption-row">
+              {editingCaption ? (
+                <>
+                  <textarea
+                    className="caption-edit-input"
+                    value={captionDraft}
+                    onChange={(e) => setCaptionDraft(e.target.value)}
+                    placeholder="Write a caption..."
+                    rows={2}
+                    autoFocus
+                  />
+                  <div className="caption-edit-actions">
+                    <button type="button" className="caption-save-button" onClick={handleSaveCaption} disabled={savingCaption}>
+                      <Check size={15} />
+                      {savingCaption ? "Saving..." : "Save"}
+                    </button>
+                    <button type="button" className="caption-cancel-button" onClick={cancelEditingCaption} disabled={savingCaption}>
+                      <X size={15} />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {randomItem.caption?.trim() ? <p>{randomItem.caption}</p> : <p className="caption-empty">No caption yet</p>}
+                  <button type="button" className="caption-edit-button" onClick={startEditingCaption} aria-label="Edit caption">
+                    <Pencil size={14} />
+                  </button>
+                </>
+              )}
+            </div>
             <div className="lightbox-actions">
               <button
                 type="button"
