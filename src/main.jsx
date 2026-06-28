@@ -384,7 +384,7 @@ function App() {
           <p className="eyebrow">You know who this is for. Get out if it ain't you ╰（‵□′）╯</p>
           <h1 id="auth-title">A way to remember our time.</h1>
           <form onSubmit={handleLogin} className="auth-form">
-            <label htmlFor="album-password">Password is the song that I dedicated to you on our first month (no caps, with spaces)</label>
+            <label htmlFor="album-password">Password is the song that I dedicated to you on your birthday (no caps, with spaces)</label>
             <div className="password-row">
               <LockKeyhole size={20} />
               <input
