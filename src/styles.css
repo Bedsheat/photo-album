@@ -892,6 +892,10 @@ h2 {
     align-self: flex-end;
   }
 
+  .gallery-grid {
+    columns: 2;
+  }
+
   .random-button,
   .primary-button,
   .secondary-button,
@@ -907,7 +911,21 @@ h2 {
     bottom: 18px;
     transform: none;
   }
+  .lightbox {
+    padding: 12px;
+    align-items: flex-start;
+    overflow-y: auto;
+  }
 
+  .lightbox-content {
+    max-height: none;
+    margin: 48px auto 24px;
+  }
+
+  .lightbox-content img,
+  .lightbox-content video {
+    max-height: 55vh;
+  }
   .confirm-actions {
     flex-direction: column-reverse;
   }
